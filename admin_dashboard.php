@@ -26,6 +26,11 @@ $result = mysqli_query($conn, $sql);
 // Fetch bakery equipment inventory data
 $sqlEquipment = "SELECT * FROM bakery_equipment_inventory";
 $resultEquipment = mysqli_query($conn, $sqlEquipment);
+
+//fetch monthly operational bills
+$sqlBills = "SELECT * FROM monthly_operational_bills";
+$resultBills = mysqli_query($conn, $sqlBills);
+
 ?>
 
 <!DOCTYPE html>
@@ -54,46 +59,62 @@ $resultEquipment = mysqli_query($conn, $sqlEquipment);
     </nav>
     <br>
     <br>
-    <h2 class="h2title">WELCOME TO THE ADMIN DASHBOARD
-        <br>
-        <p style="font-size: medium;">We're excited to have you onboard! This dashboard is
-            designed to simplify your management tasks and keep the bakery running smoothly.<br>From tracking ingredient
-            inventory and monitoring equipment to managing orders and analyzing sales performance, everything you need
-            is right here.</p>
-    </h2>
+    <div class="dashboard">
+        <div class="sidebar">
+            <ul>
+                <li><a class="active" href="admin_dashboard.php">Dashboard</a></li>
+                <li><a href="#employee">Employee</a></li>
+                <li><a href="#equipment">Inventory</a></li>
+                <li><a href="#operational-bills">Bills</a>
+                <li>
 
-    <br><br>
-    <h2 class="h2title">Counts Overview</h2>
-    <div class="dashboard-stats">
-        <div class="stat-item">
-            <h3>Number of Stock Items</h3>
-            <p><?php echo $stockCount; ?></p>
+            </ul>
         </div>
-        <div class="stat-item">
-            <h3>Number of Products</h3>
-            <p><?php echo $productCount; ?></p>
-        </div>
-        <div class="stat-item">
-            <h3>Number of Sales</h3>
-            <p><?php echo $salesCount; ?></p>
-        </div>
-    </div>
-    <br>
-    <br>
-    <br>
-    <h2 class="h2title">Employee Directory</h2>
-    <table>
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Name</th>
-                <th>ID Number</th>
-                <th>Hiring Date</th>
-                <th>Salary</th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php
+        <div class="main-content">
+            <h2 class="h2title">WELCOME TO THE ADMIN DASHBOARD
+                <br>
+
+            </h2>
+
+            <br><br>
+            <h2 class="h2title">Counts Overview</h2>
+            <div class="dashboard-stats">
+                <div class="stat-item">
+                    <h3>Number of Stock Items</h3>
+                    <p><?php echo $stockCount; ?></p>
+                </div>
+                <div class="stat-item">
+                    <h3>Number of Products</h3>
+                    <p><?php echo $productCount; ?></p>
+                </div>
+                <div class="stat-item">
+                    <h3>Number of Sales</h3>
+                    <p><?php echo $salesCount; ?></p>
+                </div>
+            </div>
+            <br>
+            <br>
+            <br>
+            <div class="print-button-container">
+                <button class="print" onclick="printTable()">
+                    PRINT REPORT
+                </button>
+            </div>
+            <section id="employee">
+                <h2 class="h2title">Employee Directory</h2>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>ID Number</th>
+                            <th>Hiring Date
+                            <th>Salary (Ksh)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php
      
             if (mysqli_num_rows($result) > 0) {
                 while($row = mysqli_fetch_assoc($result)) {
@@ -111,27 +132,29 @@ $resultEquipment = mysqli_query($conn, $sqlEquipment);
 
             mysqli_close($conn);
             ?>
-        </tbody>
-    </table>
+                    </tbody>
+                </table>
+            </section>
+            <br>
+            <section id="equipment">
+                <h2 class="h2title">Bakery Equipment Inventory</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Item Name</th>
+                            <th>Category</th>
+                            <th>Serial Number</th>
+                            <th>Purchase Date</th>
+                            <th>Purchase Cost (Ksh)</th>
 
-    <br>
-    <h2 class="h2title">Bakery Equipment Inventory</h2>
-    <table>
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Item Name</th>
-                <th>Category</th>
-                <th>Serial Number</th>
-                <th>Purchase Date</th>
-                <th>Status</th>
-                <th>Last Service</th>
-                <th>Maintenance Schedule</th>
-                <th>Purchase Cost</th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php
+                            <th>Status</th>
+                            <th>Last Service</th>
+                            <th>Maintenance Schedule</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php
             if (mysqli_num_rows($resultEquipment) > 0) {
                 while($row = mysqli_fetch_assoc($resultEquipment)) {
                     echo "<tr>";
@@ -139,21 +162,72 @@ $resultEquipment = mysqli_query($conn, $sqlEquipment);
                     echo "<td>" . $row["item_name"] . "</td>";
                     echo "<td>" . $row["category"] . "</td>";
                     echo "<td>" . $row["serial_no"] . "</td>";
-                    echo "<td>" . $row["purchase_date"] . "</td>";
+                    echo "<td>" . $row["purchase_date"] . "</td>";                    echo "<td>" . number_format($row["purchase_cost"], 2) . "</td>";
+
                     echo "<td>" . $row["status"] . "</td>";
                     echo "<td>" . $row["last_service"] . "</td>";
                     echo "<td>" . $row["maintenance_schedule"] . "</td>";
-                    echo "<td>" . number_format($row["purchase_cost"], 2) . "</td>";
                     echo "</tr>";
                 }
             } else {
                 echo "<tr><td colspan='9'>No equipment found.</td></tr>";
             }
             ?>
-        </tbody>
-    </table>
+                    </tbody>
+                </table>
+            </section>
 
 
+            <section id="operational-bills">
+                <h2 class="h2title">Monthly Operational Bills</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Month</th>
+                            <th>Year</th>
+                            <th>Electricity Bill (Ksh)</th>
+                            <th>Water Bill (Ksh)</th>
+                            <th>Rent (Ksh)</th>
+                            <th>Salaries (Ksh)</th>
+                            <th>Other Expenses (Ksh)</th>
+                            <th>Total (Ksh)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php
+        
+            if (mysqli_num_rows($resultBills) > 0) {
+                while($row = mysqli_fetch_assoc($resultBills)) {
+                    echo "<tr>";
+                    echo "<td>" . $row["id"] . "</td>";
+                    echo "<td>" . $row["month"] . "</td>";
+                    echo "<td>" . $row["year"] . "</td>";
+                    echo "<td>" . number_format($row["electricity_bill"], 2) . "</td>";
+                    echo "<td>" . number_format($row["water_bill"], 2) . "</td>";
+                    echo "<td>" . number_format($row["rent"], 2) . "</td>";
+                    echo "<td>" . number_format($row["salaries"], 2) . "</td>";
+                    echo "<td>" . number_format($row["other_expenses"], 2) . "</td>";
+                    echo "<td>" . number_format($row["total"], 2) . "</td>";
+                    echo "</tr>";
+                }
+            } else {
+                echo "<tr><td colspan='9'>No bills found.</td></tr>";
+            }
+            ?>
+                    </tbody>
+                </table>
+            </section>
+
+
+
+            <script>
+            function printTable() {
+                window.print();
+            }
+            </script>
+        </div>
+    </div>
 </body>
 
 </html>

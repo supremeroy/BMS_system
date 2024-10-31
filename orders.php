@@ -107,7 +107,7 @@ if (isset($_GET['message'])) {
                                 <td>{$row['cake_type']}</td>
                                 <td>{$row['cake_description']}</td>
                                 <td>{$row['created_at']}</td> <td>{$row['date_needed']}</td>
-                                  <td>
+                       <td>         
                         <a href='delete_order.php?delete_id={$row['id']}' class='delete-link' style='color: #ffffff;
   background-color: crimson;
   border-radius: 5px;

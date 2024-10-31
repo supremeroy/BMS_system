@@ -63,3 +63,8 @@ function calculateChange() {
   // Calculate change
   changeInput.value = (amountGiven - totalSale).toFixed(2);
 }
+
+
+function printTable() {
+  window.print();
+}

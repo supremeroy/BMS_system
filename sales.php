@@ -9,12 +9,11 @@ if (!isset($_SESSION['email'])) {
 }
 
 // Initialize a variable for the success message
-$success_message = '';
+$success_message = 's';
 
 // Check if the form has been submitted
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    // Get form data and validate
-    $product_name = $_POST['product_name'] ?? null; // Use null coalescing operator
+    $product_id = $_POST['product_id'] ?? null; 
     $quantity_sold = $_POST['quantity_sold'] ?? null;
     $price_per_unit = $_POST['price_per_unit'] ?? null;
     $total_sale = $_POST['total_sale'] ?? null;
@@ -29,7 +28,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $stmt = $pdo->prepare("INSERT INTO sales (product_id, quantity_sold, price_per_unit, total_sale, sale_date, payment_method, amount_given, change_amount) VALUES (?, ?, ?, ?, NOW(), ?, ?, ?)");
 
             // Execute the statement with the form data
-            $stmt->execute([$product_name, $quantity_sold, $price_per_unit, $total_sale, $payment_method, $amount_given, $change_amount]);
+            $stmt->execute([$product_id, $quantity_sold, $price_per_unit, $total_sale, $payment_method, $amount_given, $change_amount]);
 
             // Set success message
             $success_message = "Sale recorded successfully!";
@@ -113,7 +112,6 @@ $sales_data = $sales_stmt->fetchAll(PDO::FETCH_ASSOC);
             <label for="price_per_unit">Price per Unit:</label>
             <input type="number" step="0.01" id="price_per_unit" name="price_per_unit" required readonly>
             <br><br>
-
 
             <label for="total_sale">Total Sale Amount:</label>
             <input type="number" step="0.01" id="total_sale" name="total_sale" required readonly>
