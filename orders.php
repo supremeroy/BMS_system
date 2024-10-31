@@ -37,7 +37,7 @@ if (isset($_GET['message'])) {
             <li><a href="recipes.php">RECIPES</a></li>
             <li><a href="products.php">PRODUCTS</a></li>
             <li><a class="active" href="orders.php">ORDERS</a></li>
-            <li><a href="stock.php">STOCKS</a></li>
+            <li><a href="stock.php">STOCK</a></li>
             <li><a href="sales.php">SALES</a></li>
             <li><a href="logout.php">LOGOUT</a></li>
         </ul>

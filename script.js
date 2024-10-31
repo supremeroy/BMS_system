@@ -5,20 +5,11 @@ document
 document
   .getElementById("price_per_unit")
   .addEventListener("input", calculateTotal);
+document
+  .getElementById("amount_given")
+  .addEventListener("input", calculateChange);
 
-function updatePrice() {
-  const productSelect = document.getElementById("product_name");
-  const priceInput = document.getElementById("price_per_unit");
-
-  // Get the selected option
-  const selectedOption = productSelect.options[productSelect.selectedIndex];
-  const price = selectedOption.getAttribute("data-price");
-
-  // Update the price input field
-  priceInput.value = price;
-  calculateTotal(); // Update total whenever the price changes
-}
-
+// Function to calculate total sale amount
 function calculateTotal() {
   const quantityInput = document.getElementById("quantity_sold");
   const priceInput = document.getElementById("price_per_unit");
@@ -30,6 +21,20 @@ function calculateTotal() {
   totalInput.value = (quantity * price).toFixed(2); // Update total amount
 }
 
+// Function to calculate change
+function calculateChange() {
+  const amountGivenInput = document.getElementById("amount_given");
+  const totalSaleInput = document.getElementById("total_sale");
+  const changeInput = document.getElementById("change_amount");
+
+  const amountGiven = parseFloat(amountGivenInput.value) || 0;
+  const totalSale = parseFloat(totalSaleInput.value) || 0;
+
+  // Calculate change
+  changeInput.value = (amountGiven - totalSale).toFixed(2);
+}
+
+// Function to toggle payment fields (if you have more payment methods)
 function toggleCashFields() {
   console.log(
     "Payment method selected: " +
@@ -51,17 +56,6 @@ function toggleCashFields() {
     cashFields.style.display = "none"; // Hide cash fields
     mpesaFields.style.display = "none"; // Hide M-Pesa fields
   }
-}
-function calculateChange() {
-  const amountGivenInput = document.getElementById("amount_given");
-  const totalSaleInput = document.getElementById("total_sale");
-  const changeInput = document.getElementById("change_amount");
-
-  const amountGiven = parseFloat(amountGivenInput.value) || 0;
-  const totalSale = parseFloat(totalSaleInput.value) || 0;
-
-  // Calculate change
-  changeInput.value = (amountGiven - totalSale).toFixed(2);
 }
 
 
