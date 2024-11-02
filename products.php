@@ -20,7 +20,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $expiry_date = $_POST['expiry_date']; // Get the expiry date
 
     // Prepare an SQL statement to prevent SQL injection
-    $stmt = $pdo->prepare("INSERT INTO bakery_products (product_name, description, price, quantity ,expiery_date) VALUES (:product_name, :description, :price, :quantity, :expiry_date)");
+    $stmt = $pdo->prepare("INSERT INTO bakery_products (product_name, description, price, quantity ,expiry_date) VALUES (:product_name, :description, :price, :quantity, :expiry_date)");
 
     // Bind parameters to the SQL query
     $stmt->bindParam(':product_name', $product_name);
@@ -86,7 +86,7 @@ $products = $stmt->fetchAll();
             <textarea id="description" name="description" rows="4"></textarea>
             <br>
             <br>
-            <label for="price">Price:</label>
+            <label for="price">Price (ksh):</label>
             <input type="number" step="0.01" id="price" name="price" required>
             <br>
             <br>
@@ -105,17 +105,15 @@ $products = $stmt->fetchAll();
         <?php endif; ?>
     </div>
     </div>
-
-
     <div class="table-container">
-        <h2 class="h2title" justify-content="center" text-align="center">Bakery Products</h2>
+        <h2 class="h2title">Bakery Products</h2>
         <table>
             <thead>
                 <tr>
                     <th>ID</th>
                     <th>Product Name</th>
                     <th>Description</th>
-                    <th>Price</th>
+                    <th>Price (ksh)</th>
                     <th>Quantity</th>
                     <th>Created At</th>
                     <th>Expiry Date</th>

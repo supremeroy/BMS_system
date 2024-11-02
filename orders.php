@@ -1,17 +1,56 @@
 <?php
-    // Connect to the database
-    @include 'config.php';
-                $sql = "SELECT * FROM orders";
-                $result = $conn->query($sql);
+// Include the database configuration file
+@include 'config.php';
 
-         // Display messages
-if (isset($_GET['message'])) {
-    echo "<p style='color: green;'>{$_GET['message']}</p>";
-} elseif (isset($_GET['error'])) {
-    echo "<p style='color: red;'>{$_GET['error']}</p>";
+// Start session if needed (for user authentication)
+session_start();
+
+// Check if the form is submitted
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Retrieve form data
+    $name = $_POST['name'];
+    $email = $_POST['email'];
+    $order_number = $_POST['order_number'];
+    $cake_type = $_POST['cake_type'];
+    $cake_description = $_POST['cake_description'];
+    $date_needed = $_POST['date_needed'];
+
+    // Prepare SQL statement
+    try {
+        // Use question mark placeholders instead of named parameters
+        $stmt = $conn->prepare("INSERT INTO orders (name, email, order_number, cake_type, cake_description, date_needed) VALUES (?, ?, ?, ?, ?, ?)");
+
+        // Bind parameters
+        $stmt->bind_param("ssssss", $name, $email, $order_number, $cake_type, $cake_description, $date_needed);
+
+        // Execute the statement
+        if ($stmt->execute()) {
+            // Redirect to the orders page with a success message
+            header('Location: orders.php?message=Order placed successfully!');
+            exit;
+        } else {
+            // Redirect to the orders page with an error message
+            header('Location: orders.php?error=Failed to place order. Please try again.');
+            exit;
+        }
+    } catch (mysqli_sql_exception $e) {
+        // Handle any errors
+        echo "Error: " . $e->getMessage();
+    }
 }
-              
-                ?>
+$sql = "SELECT * FROM orders";
+$result = $conn->query($sql);
+
+        // Check if there's a success or error message
+        if (isset($_GET['message'])) {
+            echo "<div class='success-message'>{$_GET['message']}</div>";
+        }
+        if (isset($_GET['error'])) {
+            echo "<div class='error-message'>{$_GET['error']}</div>";
+        }
+
+       
+?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -60,11 +99,11 @@ if (isset($_GET['message'])) {
 
             <label for="cake_type">Type of Cake:</label>
             <select id="cake_type" name="cake_type" required>
-                <option value="Chocolate">Cheesecake</option>
-                <option value="Vanilla">Blackforest</option>
-                <option value="Red Velvet">Red Velvet</option>
-                <option value="Carrot">ButterCake</option>
-                <option value="Lemon">LemonCake</option>
+                <option value="Cheesecake">Cheesecake</option>
+                <option value="Blackforest">Blackforest</option>
+                <option value="Redvelvet">Red Velvet</option>
+                <option value="Buttercake">ButterCake</option>
+                <option value="Lemoncake">LemonCake</option>
             </select>
             <br>
             <label for="cake_description">Cake Description:</label>
@@ -77,25 +116,26 @@ if (isset($_GET['message'])) {
 
             <input type="submit" value="Place Order" class="form-btn">
         </form>
-        <div class="table-container">
-            <table>
-                <h1 class="h2title">Order List</h1>
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Name</th>
-                        <th>Email</th>
-                        <th>Order Number</th>
-                        <th>Cake Type</th>
-                        <th>Cake Description</th>
-                        <th>Created At</th>
-                        <th>Date Needed</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody>
 
-                    <?php
+    </div>
+    <div class="table-container">
+        <table>
+            <h1 class="h2title">Order List</h1>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Order Number</th>
+                    <th>Cake Type</th>
+                    <th>Cake Description</th>
+                    <th>Created At</th>
+                    <th>Date Needed</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php
                 if ($result->num_rows > 0) {
                     // Output data for each row
                     while($row = $result->fetch_assoc()) {
@@ -124,8 +164,8 @@ if (isset($_GET['message'])) {
                 // Close the database connection
                 $conn->close();
                 ?>
-            </table>
-        </div>
+        </table>
+    </div>
 
     </div>
 </body>

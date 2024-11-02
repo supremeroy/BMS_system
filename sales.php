@@ -7,7 +7,6 @@ if (!isset($_SESSION['email'])) {
     header('location:login.php');
     exit;
 }
-
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // Retrieve form data
@@ -19,10 +18,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $payment_method = $_POST['payment_method'];
     $amount_given = $_POST['amount_given'];
     $change_amount = $_POST['change_amount'];
+    $mpesa_transaction_code = isset($_POST['mpesa_transaction_code']) ? $_POST['mpesa_transaction_code'] : null;
 
-    // Prepare SQL statement to insert sales data
-    $insert_stmt = $pdo->prepare("INSERT INTO sales (product_id, quantity_sold, price_per_unit, total_sale, sale_date, payment_method, amount_given, change_amount) 
-                                   VALUES (:product_id, :quantity_sold, :price_per_unit, :total_sale, :sale_date, :payment_method, :amount_given, :change_amount)");
+    $insert_stmt = $pdo->prepare("INSERT INTO sales (product_id, quantity_sold, price_per_unit, total_sale, sale_date, payment_method, amount_given, change_amount, mpesa_transaction_code) 
+    VALUES (:product_id, :quantity_sold, :price_per_unit, :total_sale, :sale_date, :payment_method, :amount_given, :change_amount, :mpesa_transaction_code)");
+
 
     // Bind parameters
     $insert_stmt->bindParam(':product_id', $product_id);
@@ -33,18 +33,30 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $insert_stmt->bindParam(':payment_method', $payment_method);
     $insert_stmt->bindParam(':amount_given', $amount_given);
     $insert_stmt->bindParam(':change_amount', $change_amount);
+    $insert_stmt->bindParam(':mpesa_transaction_code', $mpesa_transaction_code); 
 
 
-    
+
     // Execute the statement
     if ($insert_stmt->execute()) {
-        // Redirect or display a success message
-        header('Location: sales.php?success=1');
-        exit;
+        // Update the quantity of the sold product in the products table
+        $update_stmt = $pdo->prepare("UPDATE bakery_products SET quantity = quantity - :quantity_sold WHERE id = :product_id");
+        $update_stmt->bindParam(':quantity_sold', $quantity_sold);
+        $update_stmt->bindParam(':product_id', $product_id);
+
+        if ($update_stmt->execute()) {
+            // Redirect or display a success message
+            header('Location: sales.php?success=1');
+            exit;
+        } else {
+            // Handle error in updating the product quantity
+            echo "Error: Could not update the product quantity.";
+        }
     } else {
-        // Handle error
+        // Handle error in inserting the sale
         echo "Error: Could not record the sale.";
     }
+
 }
 
 // Prepare SQL statement to fetch products data
@@ -83,8 +95,9 @@ $sales = $stmt->fetchAll(PDO::FETCH_ASSOC);
             <li><a href="recipes.php">RECIPES</a></li>
             <li><a href="products.php">PRODUCTS</a></li>
             <li><a href="orders.php">ORDERS</a></li>
-            <li><a class="active" href="sales.php">SALES</a></li>
             <li><a href="stock.php">STOCK</a></li>
+            <li><a class="active" href="sales.php">SALES</a></li>
+
             <li><a href="logout.php">LOGOUT</a></li>
         </ul>
     </nav>
@@ -116,8 +129,25 @@ $sales = $stmt->fetchAll(PDO::FETCH_ASSOC);
             <select name="payment_method" id="payment_method" required>
                 <option value="cash">Cash</option>
                 <option value="mpesa">M-Pesa</option>
-
             </select>
+
+            <div id="mpesa-fields" style="display: none;">
+                <label for="mpesa_transaction_code">M-Pesa Transaction Code:</label>
+                <input type="text" name="mpesa_transaction_code" id="mpesa_transaction_code">
+
+
+                <script>
+                document.getElementById('payment_method').addEventListener('change', function() {
+                    const mpesaFields = document.getElementById('mpesa-fields');
+                    if (this.value === 'mpesa') {
+                        mpesaFields.style.display = 'block';
+                    } else {
+                        mpesaFields.style.display = 'none';
+                    }
+                });
+                </script>
+            </div>
+
 
             <label for="amount_given">Amount Given:</label>
             <input type="number" name="amount_given" id="amount_given" required>
@@ -127,49 +157,50 @@ $sales = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
             <input type="submit" value="Add Sale" class="form-btn">
         </form>
+    </div>
 
+    <div class="table-container">
+        <h1 class="h2title">Sales Data</h1>
 
-        <div class="table-container">
-            <h1 class="h2title">Sales Data</h1>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Product Name</th>
+                    <th>Quantity Sold</th>
+                    <th>Price Per Unit</th>
+                    <th>Total Sale</th>
+                    <th>Sale Date</th>
+                    <th>Payment Method</th>
+                    <th>Amount Given</th>
+                    <th>Change Amount</th>
 
-            <table>
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Product Name</th>
-                        <th>Quantity Sold</th>
-                        <th>Price Per Unit</th>
-                        <th>Total Sale</th>
-                        <th>Sale Date</th>
-                        <th>Payment Method</th>
-                        <th>Amount Given</th>
-                        <th>Change Amount</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php if (count($sales) > 0): ?>
-                    <?php foreach ($sales as $sale): ?>
-                    <tr>
-                        <td><?= htmlspecialchars($sale['id']); ?></td>
-                        <td><?= htmlspecialchars($sale['product_name']); ?></td>
-                        <td><?= htmlspecialchars($sale['quantity_sold']); ?></td>
-                        <td><?= htmlspecialchars($sale['price_per_unit']); ?></td>
-                        <td><?= htmlspecialchars($sale['total_sale']); ?></td>
-                        <td><?= htmlspecialchars($sale['sale_date']); ?></td>
-                        <td><?= htmlspecialchars($sale['payment_method']); ?></td>
-                        <td><?= htmlspecialchars($sale['amount_given']); ?></td>
-                        <td><?= htmlspecialchars($sale['change_amount']); ?></td>
-                    </tr>
-                    <?php endforeach; ?>
-                    <?php else: ?>
-                    <tr>
-                        <td colspan="9">No sales data available.</td>
-                    </tr>
-                    <?php endif; ?>
-                </tbody>
-            </table>
-        </div>
-        <script src="script.js"></script>
+                </tr>
+            </thead>
+            <tbody>
+                <?php if (count($sales) > 0): ?>
+                <?php foreach ($sales as $sale): ?>
+                <tr>
+                    <td><?= htmlspecialchars($sale['id']); ?></td>
+                    <td><?= htmlspecialchars($sale['product_name']); ?></td>
+                    <td><?= htmlspecialchars($sale['quantity_sold']); ?></td>
+                    <td><?= htmlspecialchars($sale['price_per_unit']); ?></td>
+                    <td><?= htmlspecialchars($sale['total_sale']); ?></td>
+                    <td><?= htmlspecialchars($sale['sale_date']); ?></td>
+                    <td><?= htmlspecialchars($sale['payment_method']); ?></td>
+                    <td><?= htmlspecialchars($sale['amount_given']); ?></td>
+                    <td><?= htmlspecialchars($sale['change_amount']); ?></td>
+                </tr>
+                <?php endforeach; ?>
+                <?php else: ?>
+                <tr>
+                    <td colspan="9">No sales data available.</td>
+                </tr>
+                <?php endif; ?>
+            </tbody>
+        </table>
+    </div>
+    <script src="script.js"></script>
 </body>
 
 </html>

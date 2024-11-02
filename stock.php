@@ -23,15 +23,17 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         exit;
     }
 
-    // Prepare SQL statement to insert stock data
-     $stmt = $pdo->prepare("INSERT INTO stock (product_name, supplier_name, quantity, price, expiry_date, created_at) VALUES (?, ?, ?, ?, ?, NOW())");
+// SQL statement to insert stock data
+$stmt = $pdo->prepare("INSERT INTO stock (product_name, supplier_name, quantity, price, expiry_date, created_at) VALUES (?, ?, ?, ?, ?, NOW())");
 
-    // Execute the statement
-    if ($stmt->execute([$product_name, $supplier_name, $quantity, $price])) {
-        echo "Stock added successfully!";
-    } else {
-        echo "Error adding stock.";
-    }
+// Execute the statement with all parameters
+if ($stmt->execute([$product_name, $supplier_name, $quantity, $price, $expiry_date])) {
+    echo "Stock added successfully!";
+} else {
+    // Fetch the error info
+    $errorInfo = $stmt->errorInfo();
+    echo "Error adding stock: " . htmlspecialchars($errorInfo[2]);
+}
 
 }
 
@@ -92,8 +94,8 @@ $stocks = $stmt->fetchAll(PDO::FETCH_ASSOC);
             <input type="number" id="quantity" name="quantity" required>
             <br><br>
 
-            <label for="price">Price per Unit:</label>
-            <input type="number" step="0.01" id="price" name="price" required>
+            <label for="price">Price per Unit (ksh):</label>
+            <input type="number" step="1" id="price" name="price" required>
             <br><br>
 
             <label for="expiry_date">Expiry Date:</label>
@@ -109,18 +111,21 @@ $stocks = $stmt->fetchAll(PDO::FETCH_ASSOC);
         <table>
             <thead>
                 <tr>
+                    <th>Stock id</th>
                     <th>Product Name</th>
                     <th>Supplier Name</th>
                     <th>Quantity</th>
-                    <th>Price per Unit</th>
+                    <th>Price per Unit (ksh)</th>
                     <th>Date Added</th>
                     <th>Expiry Date</th>
                 </tr>
             </thead>
+
             <tbody>
                 <?php if (count($stocks) > 0): ?>
                 <?php foreach ($stocks as $stock): ?>
                 <tr>
+                    <td><?php echo htmlspecialchars($stock['id']); ?></td>
                     <td><?php echo htmlspecialchars($stock['product_name']); ?></td>
                     <td><?php echo htmlspecialchars($stock['supplier_name']); ?></td>
                     <td><?php echo htmlspecialchars($stock['quantity']); ?></td>

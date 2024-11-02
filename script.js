@@ -62,3 +62,5 @@ function toggleCashFields() {
 function printTable() {
   window.print();
 }
+
+
