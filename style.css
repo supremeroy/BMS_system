@@ -292,7 +292,7 @@ tr:hover {
   border-color: #000000;
 }
 .stat-item {
-  background-color: #07ab69;
+  background-color: #008e45;
   border: 1px solid #ddd;
   border-radius: 8px;
   padding: 20px;
@@ -403,3 +403,27 @@ font-size: 20px;
 /***** End SIDE DASHBOARD *****/
 
 
+/***** TOTAL *****/ 
+.total{
+  
+    background-color: #008e45b4;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+     width: 100%;
+  }
+  
+  .total ,h3 {
+    margin: 0%;
+    font-size: 20px;
+    color: #f0f0f0;
+  }
+  .total p {
+    font-size: 24px;
+    font-weight: bold;
+    color: #f4f4f4; 
+    
+  }
+
+/***** End TOTAL *****/

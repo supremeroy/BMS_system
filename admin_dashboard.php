@@ -20,6 +20,12 @@ $stockCount = getCount('stock');
 $productCount = getCount('bakery_products');
 $salesCount = getCount('sales');
 
+// Fetch total sales amount in Ksh
+$total_sales_stmt = mysqli_query($conn, "SELECT SUM(total_sale) AS total_sales FROM sales");
+$total_sales_row = mysqli_fetch_assoc($total_sales_stmt);
+$total_sales_amount = $total_sales_row['total_sales'] ? $total_sales_row['total_sales'] : 0; // Default to 0 if NULL
+
+
 $sql = "SELECT id, name, id_number, hiring_date, salary FROM employees";
 $result = mysqli_query($conn, $sql);
 
@@ -90,6 +96,11 @@ $resultBills = mysqli_query($conn, $sqlBills);
                 <div class="stat-item">
                     <h3>Number of Sales</h3>
                     <p><?php echo $salesCount; ?></p>
+
+                </div>
+                <div class="stat-item">
+                    <h3>Total Sales in Ksh</h3>
+                    <p><?php echo number_format($total_sales_amount, 2); ?></p>
                 </div>
             </div>
             <br>

@@ -7,7 +7,18 @@ if (!isset($_SESSION['email'])) {
     header('location:login.php');
     exit;
 }
-// Handle form submission
+
+// Check connection
+if ($conn->connect_error) {
+    die("Connection failed: " . $conn->connect_error);
+}
+// Fetch total sales amount in Ksh
+$total_sales_stmt = mysqli_query($conn, "SELECT SUM(total_sale) AS total_sales FROM sales");
+$total_sales_row = mysqli_fetch_assoc($total_sales_stmt);
+$total_sales_amount = $total_sales_row['total_sales'] ? $total_sales_row['total_sales'] : 0; // Default to 0 if NULL
+
+
+
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // Retrieve form data
     $product_id = $_POST['product_name'];
@@ -20,43 +31,57 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $change_amount = $_POST['change_amount'];
     $mpesa_transaction_code = isset($_POST['mpesa_transaction_code']) ? $_POST['mpesa_transaction_code'] : null;
 
-    $insert_stmt = $pdo->prepare("INSERT INTO sales (product_id, quantity_sold, price_per_unit, total_sale, sale_date, payment_method, amount_given, change_amount, mpesa_transaction_code) 
-    VALUES (:product_id, :quantity_sold, :price_per_unit, :total_sale, :sale_date, :payment_method, :amount_given, :change_amount, :mpesa_transaction_code)");
+    // Check available quantity in the bakery_products table
+    $check_stmt = $pdo->prepare("SELECT quantity FROM bakery_products WHERE id = :product_id");
+    $check_stmt->bindParam(':product_id', $product_id);
+    $check_stmt->execute();
+    $product = $check_stmt->fetch(PDO::FETCH_ASSOC);
 
+    if ($product) {
+        $available_quantity = $product['quantity'];
 
-    // Bind parameters
-    $insert_stmt->bindParam(':product_id', $product_id);
-    $insert_stmt->bindParam(':quantity_sold', $quantity_sold);
-    $insert_stmt->bindParam(':price_per_unit', $price_per_unit);
-    $insert_stmt->bindParam(':total_sale', $total_sale);
-    $insert_stmt->bindParam(':sale_date', $sale_date);
-    $insert_stmt->bindParam(':payment_method', $payment_method);
-    $insert_stmt->bindParam(':amount_given', $amount_given);
-    $insert_stmt->bindParam(':change_amount', $change_amount);
-    $insert_stmt->bindParam(':mpesa_transaction_code', $mpesa_transaction_code); 
-
-
-
-    // Execute the statement
-    if ($insert_stmt->execute()) {
-        // Update the quantity of the sold product in the products table
-        $update_stmt = $pdo->prepare("UPDATE bakery_products SET quantity = quantity - :quantity_sold WHERE id = :product_id");
-        $update_stmt->bindParam(':quantity_sold', $quantity_sold);
-        $update_stmt->bindParam(':product_id', $product_id);
-
-        if ($update_stmt->execute()) {
-            // Redirect or display a success message
-            header('Location: sales.php?success=1');
-            exit;
+        // Check if quantity sold exceeds available quantity
+        if ($quantity_sold > $available_quantity) {
+            echo "Error: Quantity sold exceeds available quantity in stock.";
         } else {
-            // Handle error in updating the product quantity
-            echo "Error: Could not update the product quantity.";
+            // Prepare SQL statement to insert sales data
+            $insert_stmt = $pdo->prepare("INSERT INTO sales (product_id, quantity_sold, price_per_unit, total_sale, sale_date, payment_method, amount_given, change_amount, mpesa_transaction_code) 
+                                           VALUES (:product_id, :quantity_sold, :price_per_unit, :total_sale, :sale_date, :payment_method, :amount_given, :change_amount, :mpesa_transaction_code)");
+
+            // Bind parameters
+            $insert_stmt->bindParam(':product_id', $product_id);
+            $insert_stmt->bindParam(':quantity_sold', $quantity_sold);
+            $insert_stmt->bindParam(':price_per_unit', $price_per_unit);
+            $insert_stmt->bindParam(':total_sale', $total_sale);
+            $insert_stmt->bindParam(':sale_date', $sale_date);
+            $insert_stmt->bindParam(':payment_method', $payment_method);
+            $insert_stmt->bindParam(':amount_given', $amount_given);
+            $insert_stmt->bindParam(':change_amount', $change_amount);
+            $insert_stmt->bindParam(':mpesa_transaction_code', $mpesa_transaction_code); // Bind M-Pesa transaction code
+
+            // Execute the statement
+            if ($insert_stmt->execute()) {
+                // Update the quantity of the sold product in the products table
+                $update_stmt = $pdo->prepare("UPDATE bakery_products SET quantity = quantity - :quantity_sold WHERE id = :product_id");
+                $update_stmt->bindParam(':quantity_sold', $quantity_sold);
+                $update_stmt->bindParam(':product_id', $product_id);
+
+                if ($update_stmt->execute()) {
+                    // Redirect or display a success message
+                    header('Location: sales.php?success=1');
+                    exit;
+                } else {
+                    // Handle error in updating the product quantity
+                    echo "Error: Could not update the product quantity.";
+                }
+            } else {
+                // Handle error in inserting the sale
+                echo "Error: Could not record the sale.";
+            }
         }
     } else {
-        // Handle error in inserting the sale
-        echo "Error: Could not record the sale.";
+        echo "Error: Product not found.";
     }
-
 }
 
 // Prepare SQL statement to fetch products data
@@ -71,8 +96,14 @@ $stmt = $pdo->prepare("SELECT s.id, p.product_name, s.quantity_sold, s.price_per
                         ORDER BY s.sale_date DESC");
 $stmt->execute();
 $sales = $stmt->fetchAll(PDO::FETCH_ASSOC);
- if (isset($_GET['success'])): ?>
+ if (isset($_GET['success'])):
+
+
+ 
+ 
+ ?>
 <p style="color: green;">Sale recorded successfully!</p>
+
 <?php endif; ?>
 
 
@@ -192,6 +223,7 @@ $sales = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     <td><?= htmlspecialchars($sale['change_amount']); ?></td>
                 </tr>
                 <?php endforeach; ?>
+
                 <?php else: ?>
                 <tr>
                     <td colspan="9">No sales data available.</td>
@@ -199,6 +231,14 @@ $sales = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 <?php endif; ?>
             </tbody>
         </table>
+        <div class="total">
+
+            <h3>Total Sales in Ksh</h3>
+            <p><?php echo number_format($total_sales_amount, 2); ?></p>
+
+        </div>
+
+
     </div>
     <script src="script.js"></script>
 </body>
